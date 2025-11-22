@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transpiration Exploration Lab</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ICONS (Inline SVGs to avoid external dependencies) ---
+        const IconWrapper = ({ children, size = 24, className = "" }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {children}
+            </svg>
+        );
+
+        const Icons = {
+            Microscope: (props) => <IconWrapper {...props}><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></IconWrapper>,
+            Wind: (props) => <IconWrapper {...props}><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></IconWrapper>,
+            Sun: (props) => <IconWrapper {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconWrapper>,
+            Droplets: (props) => <IconWrapper {...props}><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.35"/></IconWrapper>,
+            ArrowRight: (props) => <IconWrapper {...props}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></IconWrapper>,
+            ArrowUp: (props) => <IconWrapper {...props}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></IconWrapper>,
+            FlaskConical: (props) => <IconWrapper {...props}><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></IconWrapper>,
+            Thermometer: (props) => <IconWrapper {...props}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></IconWrapper>,
+            Sprout: (props) => <IconWrapper {...props}><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></IconWrapper>,
+            Activity: (props) => <IconWrapper {...props}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></IconWrapper>,
+            PlayCircle: (props) => <IconWrapper {...props}><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></IconWrapper>,
+            AlertTriangle: (props) => <IconWrapper {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconWrapper>,
+            ImageIcon: (props) => <IconWrapper {...props}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></IconWrapper>,
+            Search: (props) => <IconWrapper {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></IconWrapper>
+        };
+
+        // --- MAIN COMPONENT ---
+
+        const TranspirationApp = () => {
+          const [activeTab, setActiveTab] = useState('lab'); // 'lab', 'importance', 'investigate', 'locate'
+          
+          // --- STATE: LAB & MECHANISM ---
+          const [labViewMode, setLabViewMode] = useState('structure'); // 'structure', 'process'
+          const [processStep, setProcessStep] = useState(1);
+          const [isStained, setIsStained] = useState(false);
+
+          // --- STATE: IMPORTANCE ---
+          const [plantHealth, setPlantHealth] = useState('healthy'); // 'healthy', 'wilted'
+
+          // --- STATE: INVESTIGATION (FACTORS) ---
+          const [factors, setFactors] = useState({ sunlight: 50, wind: 30, humidity: 40 });
+          const [rate, setRate] = useState(1);
+
+          // Effect: Calculate Transpiration Rate
+          useEffect(() => {
+            const sunFactor = factors.sunlight / 50; 
+            const windFactor = 1 + (factors.wind / 100);
+            const humidityFactor = 1 - (factors.humidity / 120);
+            let newRate = (sunFactor * windFactor * humidityFactor).toFixed(2);
+            if (newRate < 0.1) newRate = 0.1;
+            setRate(newRate);
+          }, [factors]);
+
+          const handleStartMechanism = () => {
+            setLabViewMode('process');
+            setProcessStep(1);
+          };
+
+          return (
+            <div className="min-h-screen bg-stone-50 text-stone-800 font-sans flex flex-col items-center p-4 sm:p-6">
+              
+              {/* --- HEADER & NAV --- */}
+              <header className="w-full max-w-6xl mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-xl shadow-sm border border-stone-200 mb-4">
+                  <h1 className="text-2xl font-bold text-green-900 flex items-center gap-2">
+                    <Icons.Microscope className="text-green-600" />
+                    Transpiration Exploration Lab
+                  </h1>
+                  <div className="flex gap-2 mt-4 md:mt-0 bg-stone-100 p-1 rounded-lg overflow-x-auto max-w-full">
+                    {[
+                      { id: 'lab', label: '1. Lab & Mechanism', icon: Icons.FlaskConical },
+                      { id: 'importance', label: '2. Importance', icon: Icons.Sprout },
+                      { id: 'investigate', label: '3. Investigation', icon: Icons.Activity },
+                      { id: 'locate', label: '4. Locate the Xylem!', icon: Icons.Search },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                          activeTab === tab.id ? 'bg-white shadow text-green-700' : 'text-stone-500 hover:text-stone-700'
+                        }`}
+                      >
+                        <tab.icon size={16} /> {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </header>
+
+              {/* --- MAIN CONTENT AREA --- */}
+              <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                
+                {/* --- TAB 1: LAB & MECHANISM --- */}
+                {activeTab === 'lab' && (
+                  <React.Fragment>
+                    <div className="flex flex-col gap-4">
+                      {/* Sub-Navigation for Lab View */}
+                      <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-200">
+                        <h2 className="font-bold text-stone-700 mb-3">Lab View Mode</h2>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button 
+                            onClick={() => setLabViewMode('structure')}
+                            className={`p-2 text-sm rounded border text-center transition-all ${labViewMode === 'structure' ? 'bg-green-50 border-green-500 text-green-800 font-bold' : 'bg-white border-stone-200 text-stone-500'}`}
+                          >
+                            Microscope Structure
+                          </button>
+                          <button 
+                            onClick={() => setLabViewMode('process')}
+                            className={`p-2 text-sm rounded border text-center transition-all ${labViewMode === 'process' ? 'bg-blue-50 border-blue-500 text-blue-800 font-bold' : 'bg-white border-stone-200 text-stone-500'}`}
+                          >
+                            Process Mechanism
+                          </button>
+                        </div>
+                      </div>
+
+                      {labViewMode === 'structure' ? (
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex-grow">
+                          <h3 className="font-bold text-lg mb-2">Stem Cross-Section</h3>
+                          <p className="text-stone-600 text-sm mb-4">
+                            Observe the vascular bundles arranged in a ring (typical of dicots). The inner tissue is the Xylem.
+                          </p>
+                          <div className="bg-blue-50 p-4 rounded border border-blue-100 mb-4">
+                            <h4 className="text-blue-800 font-bold text-sm mb-1">Virtual Experiment</h4>
+                            <p className="text-xs text-blue-600 mb-3">Apply red dye to see which tissues transport water.</p>
+                            <button 
+                              onClick={() => setIsStained(!isStained)}
+                              className={`w-full py-2 text-sm font-bold rounded transition-colors ${isStained ? 'bg-red-100 text-red-600' : 'bg-blue-600 text-white'}`}
+                            >
+                              {isStained ? "Remove Dye" : "Add Soluble Dye"}
+                            </button>
+                          </div>
+                          <button onClick={handleStartMechanism} className="w-full mt-4 py-2 text-green-700 border border-green-200 rounded hover:bg-green-50 text-sm font-bold flex justify-center items-center gap-2">
+                            View How It Works <Icons.ArrowRight size={16}/>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex-grow flex flex-col">
+                          <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                             <Icons.PlayCircle className="text-blue-500"/> The Mechanism
+                          </h3>
+                          <div className="flex flex-col gap-3 mt-2 flex-grow">
+                            {[
+                              { id: 1, title: "1. Evaporation", desc: "Water evaporates from spongy mesophyll surfaces." },
+                              { id: 2, title: "2. Osmosis", desc: "Water moves across leaf cells down potential gradient." },
+                              { id: 3, title: "3. Transpiration Pull", desc: "Cohesion-Tension pulls water up the xylem." },
+                              { id: 4, title: "4. Evidence", desc: "Soluble dyes trace the path of water." }
+                            ].map(s => (
+                              <button 
+                                key={s.id} 
+                                onClick={() => setProcessStep(s.id)}
+                                className={`text-left p-4 rounded-lg border transition-all duration-300 ${processStep === s.id ? 'bg-blue-50 border-blue-500 shadow-md scale-105' : 'bg-white border-stone-200 hover:bg-stone-50'}`}
+                              >
+                                <div className={`font-bold text-lg mb-1 ${processStep === s.id ? 'text-blue-800' : 'text-stone-600'}`}>{s.title}</div>
+                                {processStep === s.id && <div className="text-xs text-blue-600">{s.desc}</div>}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="lg:col-span-2 bg-white rounded-xl shadow-lg border border-stone-200 h-[600px] relative overflow-hidden">
+                      {labViewMode === 'structure' ? (
+                         <LabCrossSectionView isStained={isStained} />
+                      ) : (
+                         <ProcessAnimationView step={processStep} isStained={isStained} />
+                      )}
+                    </div>
+                  </React.Fragment>
+                )}
+
+                {/* --- TAB 2: IMPORTANCE --- */}
+                {activeTab === 'importance' && (
+                  <React.Fragment>
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h2 className="font-bold text-xl text-stone-800 mb-4">Why is it important?</h2>
+                        <div className="space-y-3">
+                          <div className="p-3 bg-green-50 border border-green-100 rounded-lg">
+                            <div className="font-bold text-green-800 flex items-center gap-2 text-sm"><Icons.Thermometer size={16}/> 1. Cooling</div>
+                            <p className="text-xs text-stone-600 mt-1">Evaporation removes latent heat, preventing enzymes from overheating.</p>
+                          </div>
+                          <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                            <div className="font-bold text-blue-800 flex items-center gap-2 text-sm"><Icons.Activity size={16}/> 2. Mineral Transport</div>
+                            <p className="text-xs text-stone-600 mt-1">Water stream carries dissolved mineral ions (Mg²⁺, NO₃⁻) from roots to leaves.</p>
+                          </div>
+                          <div className="p-3 bg-orange-50 border border-orange-100 rounded-lg">
+                            <div className="font-bold text-orange-800 flex items-center gap-2 text-sm"><Icons.ArrowUp size={16}/> 3. Turgor Pressure</div>
+                            <p className="text-xs text-stone-600 mt-1">Water uptake keeps cells turgid, providing structural support for non-woody plants.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-red-50 p-6 rounded-xl border border-red-100">
+                        <h3 className="font-bold text-red-900 mb-2 flex items-center gap-2">
+                          <Icons.AlertTriangle size={18}/> Simulation
+                        </h3>
+                        <p className="text-xs text-red-800 mb-4">Observe the cells when water supply is cut off.</p>
+                        <div className="flex gap-2">
+                           <button onClick={() => setPlantHealth('healthy')} className={`flex-1 py-2 text-sm rounded font-bold ${plantHealth === 'healthy' ? 'bg-green-600 text-white' : 'bg-white border hover:bg-gray-50'}`}>Normal Water</button>
+                           <button onClick={() => setPlantHealth('wilted')} className={`flex-1 py-2 text-sm rounded font-bold ${plantHealth === 'wilted' ? 'bg-red-600 text-white' : 'bg-white border hover:bg-gray-50'}`}>Stop Water</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-2 bg-white rounded-xl shadow-lg border border-stone-200 h-[600px] flex items-center justify-center bg-gradient-to-b from-sky-50 to-white relative overflow-hidden">
+                       <ImportanceVisual health={plantHealth} />
+                    </div>
+                  </React.Fragment>
+                )}
+
+                {/* --- TAB 3: INVESTIGATION (FACTORS) --- */}
+                {activeTab === 'investigate' && (
+                  <React.Fragment>
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h2 className="font-bold text-xl text-stone-800 mb-4 flex items-center gap-2">
+                           <Icons.Activity className="text-blue-600"/> Investigate Factors
+                        </h2>
+                        <p className="text-sm text-stone-600 mb-6">
+                          Adjust environmental conditions to see how they affect the rate of transpiration.
+                        </p>
+
+                        <div className="space-y-6">
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <label className="text-xs font-bold text-stone-500 uppercase flex gap-2 items-center"><Icons.Sun size={14} className="text-orange-400"/> Light Intensity</label>
+                              <span className="text-xs bg-stone-100 px-2 rounded">{factors.sunlight}%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value={factors.sunlight} onChange={(e) => setFactors({...factors, sunlight: parseInt(e.target.value)})} className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-orange-500" />
+                            <p className="text-[10px] text-stone-400 mt-1">Affects stomatal opening.</p>
+                          </div>
+                          
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <label className="text-xs font-bold text-stone-500 uppercase flex gap-2 items-center"><Icons.Wind size={14} className="text-sky-400"/> Wind Speed</label>
+                              <span className="text-xs bg-stone-100 px-2 rounded">{factors.wind}%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value={factors.wind} onChange={(e) => setFactors({...factors, wind: parseInt(e.target.value)})} className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-sky-500" />
+                            <p className="text-[10px] text-stone-400 mt-1">Removes diffusion shells.</p>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <label className="text-xs font-bold text-stone-500 uppercase flex gap-2 items-center"><Icons.Droplets size={14} className="text-blue-400"/> Humidity</label>
+                              <span className="text-xs bg-stone-100 px-2 rounded">{factors.humidity}%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value={factors.humidity} onChange={(e) => setFactors({...factors, humidity: parseInt(e.target.value)})} className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                            <p className="text-[10px] text-stone-400 mt-1">Affects concentration gradient.</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+                        <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Current Rate</div>
+                        <div className="text-3xl font-mono font-bold text-blue-700">{rate}x</div>
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-2 bg-white rounded-xl shadow-lg border border-stone-200 h-[600px] overflow-hidden relative">
+                       <InvestigationVisual rate={rate} />
+                    </div>
+                  </React.Fragment>
+                )}
+
+                {/* --- TAB 4: LOCATE XYLEM (Redesigned) --- */}
+                {activeTab === 'locate' && (
+                  <div className="col-span-1 lg:col-span-3 bg-white rounded-xl shadow-lg border border-stone-200 p-6">
+                    <div className="flex justify-between items-center mb-6">
+                       <div>
+                         <h2 className="text-2xl font-bold text-stone-800 flex items-center gap-2"><Icons.Search className="text-orange-500"/> Locate the Xylem!</h2>
+                         <p className="text-stone-500 mt-1">The photomicrographs below show the location of xylem tissues in different plant organs.</p>
+                       </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-8">
+                      
+                      {/* Image 1: Leaf */}
+                      <div className="border border-stone-200 rounded-xl overflow-hidden flex flex-col md:flex-row h-64">
+                         <div className="w-full md:w-2/3 bg-stone-100 relative flex items-center justify-center group">
+                            <img src="/api/placeholder/600/400" alt="Leaf Xylem" className="w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-all" />
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                               <span className="bg-white/90 px-3 py-1 rounded shadow text-xs text-stone-600">Search: "Leaf Midrib Cross Section"</span>
+                            </div>
+                         </div>
+                         <div className="w-full md:w-1/3 bg-white p-4 flex flex-col items-center justify-center border-l border-stone-100">
+                            <h3 className="font-bold text-stone-700 mb-2">Leaf Midrib</h3>
+                            <LeafSchematic />
+                            <p className="text-xs text-center text-stone-500 mt-2">Xylem is dorsal (Top)</p>
+                         </div>
+                      </div>
+
+                      {/* Image 2: Stem */}
+                      <div className="border border-stone-200 rounded-xl overflow-hidden flex flex-col md:flex-row h-64">
+                         <div className="w-full md:w-2/3 bg-stone-100 relative flex items-center justify-center group">
+                            <img src="/api/placeholder/600/400" alt="Stem Xylem" className="w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-all" />
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                               <span className="bg-white/90 px-3 py-1 rounded shadow text-xs text-stone-600">Search: "Dicot Stem Cross Section"</span>
+                            </div>
+                         </div>
+                         <div className="w-full md:w-1/3 bg-white p-4 flex flex-col items-center justify-center border-l border-stone-100">
+                            <h3 className="font-bold text-stone-700 mb-2">Dicot Stem</h3>
+                            <StemSchematic />
+                            <p className="text-xs text-center text-stone-500 mt-2">Vascular Bundles in Ring (Xylem Inner)</p>
+                         </div>
+                      </div>
+
+                      {/* Image 3: Root */}
+                      <div className="border border-stone-200 rounded-xl overflow-hidden flex flex-col md:flex-row h-64">
+                         <div className="w-full md:w-2/3 bg-stone-100 relative flex items-center justify-center group">
+                            <img src="/api/placeholder/600/400" alt="Root Xylem" className="w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-all" />
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                               <span className="bg-white/90 px-3 py-1 rounded shadow text-xs text-stone-600">Search: "Dicot Root Cross Section"</span>
+                            </div>
+                         </div>
+                         <div className="w-full md:w-1/3 bg-white p-4 flex flex-col items-center justify-center border-l border-stone-100">
+                            <h3 className="font-bold text-stone-700 mb-2">Dicot Root</h3>
+                            <RootSchematic />
+                            <p className="text-xs text-center text-stone-500 mt-2">Central Star Shape</p>
+                         </div>
+                      </div>
+
+                      {/* Image 4: Trunk */}
+                      <div className="border border-stone-200 rounded-xl overflow-hidden flex flex-col md:flex-row h-64">
+                         <div className="w-full md:w-2/3 bg-stone-100 relative flex items-center justify-center group">
+                            <img src="/api/placeholder/600/400" alt="Trunk Xylem" className="w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-all" />
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                               <span className="bg-white/90 px-3 py-1 rounded shadow text-xs text-stone-600">Search: "Tree Trunk Cross Section"</span>
+                            </div>
+                         </div>
+                         <div className="w-full md:w-1/3 bg-white p-4 flex flex-col items-center justify-center border-l border-stone-100">
+                            <h3 className="font-bold text-stone-700 mb-2">Woody Trunk</h3>
+                            <TrunkSchematic />
+                            <p className="text-xs text-center text-stone-500 mt-2">Wood = Secondary Xylem</p>
+                         </div>
+                      </div>
+
+                    </div>
+                  </div>
+                )}
+
+              </main>
+              <footer className="w-full max-w-6xl text-center text-stone-400 text-xs border-t border-stone-200 pt-4 pb-4">
+                ⓒ WFNC Biology department 2025 : Xylem under light microscope
+              </footer>
+            </div>
+          );
+        };
+
+        // --- HELPER COMPONENTS (SVG Illustrations) ---
+
+        const LabCrossSectionView = ({ isStained }) => {
+          return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-white">
+              <div className="absolute top-4 left-4 text-xs text-stone-400 font-mono">View: 40x Magnification</div>
+              <svg viewBox="0 0 400 400" className="w-full max-w-md drop-shadow-2xl">
+                <circle cx="200" cy="200" r="190" fill="#F1F8E9" stroke="#558B2F" strokeWidth="4" />
+                <circle cx="200" cy="200" r="60" fill="#DCEDC8" />
+                <text x="200" y="205" textAnchor="middle" fontSize="10" fill="#33691E" fontWeight="bold">Pith</text>
+
+                {Array.from({ length: 8 }).map((_, i) => {
+                  const angle = (i * 360) / 8;
+                  const x = 200 + 130 * Math.cos((angle * Math.PI) / 180);
+                  const y = 200 + 130 * Math.sin((angle * Math.PI) / 180);
+                  const rotation = angle + 90;
+                  return (
+                    <g key={i} transform={`translate(${x}, ${y}) rotate(${rotation})`}>
+                       <path d="M-20 -30 Q20 -30 20 -30 L15 30 Q0 40 -15 30 Z" fill="#FFF" stroke="#81C784" strokeWidth="1" />
+                       <path d="M-18 -28 Q18 -28 18 -28 L15 -10 Q0 -5 -15 -10 Z" fill="#A5D6A7" /> 
+                       <line x1="-15" y1="-5" x2="15" y2="-5" stroke="#558B2F" strokeWidth="2" />
+                       {/* Xylem - Stains Red */}
+                       <path 
+                         d="M-15 0 Q0 5 15 0 L12 25 Q0 35 -12 25 Z" 
+                         fill={isStained ? "#FF1744" : "#EF9A9A"} 
+                         stroke={isStained ? "#D50000" : "#E57373"} 
+                         className="transition-colors duration-1000"
+                       />
+                       <circle cx="-5" cy="10" r="3" fill="white" opacity="0.6" />
+                       <circle cx="5" cy="15" r="4" fill="white" opacity="0.6" />
+                    </g>
+                  );
+                })}
+                <line x1="200" y1="330" x2="200" y2="360" stroke="#D50000" strokeWidth="2" />
+                <text x="200" y="375" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#D50000">Xylem (Inside)</text>
+              </svg>
+            </div>
+          );
+        };
+
+        const ProcessAnimationView = ({ step, isStained }) => {
+          const waterColor = isStained ? "#FF8A80" : "#90CAF9";
+          const particleColor = isStained ? "#D50000" : "#1976D2";
+
+          return (
+            <div className="w-full h-full bg-sky-50 relative font-sans select-none">
+              <svg viewBox="0 0 800 600" className="w-full h-full">
+                <defs>
+                  <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill={particleColor} />
+                  </marker>
+                </defs>
+
+                <rect width="800" height="600" fill="#F1F8E9" opacity="0.3" />
+
+                <path d="M0 20 L800 20" stroke="#F57C00" strokeWidth="8" opacity="0.6" />
+                <g>
+                  {Array.from({ length: 16 }).map((_, i) => (
+                    <rect key={`ue-${i}`} x={i * 50} y="24" width="50" height="30" fill="#FFFFFF" stroke="#4CAF50" strokeWidth="2" />
+                  ))}
+                </g>
+                <text x="10" y="15" fontSize="14" fill="#EF6C00" fontWeight="bold">Waxy Cuticle</text>
+                <text x="10" y="45" fontSize="12" fill="#2E7D32">Upper Epidermis</text>
+
+                <g transform="translate(0, 54)">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <rect key={`pal-${i}`} x={10 + i * 40} y="0" width="30" height="120" rx="8" fill="#A5D6A7" stroke="#388E3C" strokeWidth="2" />
+                  ))}
+                  {Array.from({ length: 20 }).map((_, i) => (
+                     <circle key={`chl-${i}`} cx={25 + i * 40} cy="30" r="5" fill="#388E3C" opacity="0.5" />
+                  ))}
+                </g>
+                <text x="10" y="80" fontSize="14" fill="#1B5E20" fontWeight="bold" className="bg-white/50">Palisade Mesophyll</text>
+
+                <g transform="translate(0, 180)">
+                   <path d="M50 20 Q20 50 50 80 Q80 90 100 60 Q110 30 80 10 Z" fill="#C8E6C9" stroke="#388E3C" strokeWidth="2" />
+                   <path d="M150 50 Q120 90 150 120 Q190 130 210 90 Q200 50 150 50 Z" fill="#C8E6C9" stroke="#388E3C" strokeWidth="2" />
+                   <path d="M250 10 Q220 40 240 80 Q290 90 310 50 Q300 10 250 10 Z" fill="#C8E6C9" stroke="#388E3C" strokeWidth="2" />
+                   <path d="M350 80 Q320 120 350 150 Q400 160 420 120 Q400 80 350 80 Z" fill="#C8E6C9" stroke="#388E3C" strokeWidth="2" />
+                   <path d="M50 150 Q20 190 50 220 Q90 230 110 190 Q100 150 50 150 Z" fill="#C8E6C9" stroke="#388E3C" strokeWidth="2" />
+                   <path d="M200 200 Q170 240 200 270 Q250 280 270 240 Q250 200 200 200 Z" fill="#C8E6C9" stroke="#388E3C" strokeWidth="2" />
+                   
+                   <path d="M50 20 Q20 50 50 80 Q80 90 100 60 Q110 30 80 10 Z" fill="none" stroke={particleColor} strokeWidth="6" strokeOpacity="0.5" strokeDasharray="5 5" />
+                   <path d="M150 50 Q120 90 150 120 Q190 130 210 90 Q200 50 150 50 Z" fill="none" stroke={particleColor} strokeWidth="6" strokeOpacity="0.5" strokeDasharray="5 5" />
+                </g>
+                <text x="10" y="300" fontSize="14" fill="#33691E" fontWeight="bold">Spongy Mesophyll</text>
+                <text x="120" y="250" fontSize="14" fill="#0277BD" fontStyle="italic" opacity="0.7">Moist Air Spaces</text>
+
+                <g transform="translate(550, 200)">
+                   <circle cx="100" cy="100" r="90" fill="#FFF" stroke="#555" strokeWidth="2" />
+                   <path d="M20 80 L180 80 L150 30 Q100 10 50 30 Z" fill={waterColor} stroke="#1565C0" strokeWidth="2" />
+                   <text x="100" y="60" textAnchor="middle" fontWeight="bold" fill="#0D47A1">XYLEM</text>
+                   <path d="M20 100 L180 100 L150 160 Q100 180 50 160 Z" fill="#FFCCBC" stroke="#BF360C" strokeWidth="2" />
+                   <text x="100" y="140" textAnchor="middle" fontWeight="bold" fill="#BF360C">PHLOEM</text>
+                </g>
+
+                <g transform="translate(0, 500)">
+                   <rect x="0" y="0" width="250" height="30" fill="#FFFFFF" stroke="#4CAF50" strokeWidth="2" />
+                   <rect x="450" y="0" width="350" height="30" fill="#FFFFFF" stroke="#4CAF50" strokeWidth="2" />
+                   
+                   <path d="M250 0 Q230 20 250 40 Q270 20 250 0" fill="#C8E6C9" stroke="#2E7D32" strokeWidth="3" />
+                   <path d="M450 0 Q470 20 450 40 Q430 20 450 0" fill="#C8E6C9" stroke="#2E7D32" strokeWidth="3" />
+                   <text x="350" y="30" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#1B5E20">STOMATA</text>
+                </g>
+
+                {step === 1 && (
+                  <g>
+                    <text x="400" y="300" textAnchor="middle" fontSize="60" fill={particleColor} opacity="0.1" fontWeight="900">EVAPORATION</text>
+                    <text x="400" y="300" textAnchor="middle" fontSize="40" fill={particleColor} fontWeight="bold" stroke="white" strokeWidth="2">1. EVAPORATION</text>
+                    
+                    <circle cx="100" cy="220" r="6" fill={particleColor} className="animate-ping" />
+                    <circle cx="200" cy="280" r="6" fill={particleColor} className="animate-ping" style={{animationDelay:'0.3s'}} />
+                    <circle cx="300" cy="220" r="6" fill={particleColor} className="animate-ping" style={{animationDelay:'0.7s'}} />
+                    
+                    <path d="M100 220 Q120 300 150 400" stroke={particleColor} strokeWidth="3" strokeDasharray="5 5" fill="none">
+                      <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1s" repeatCount="indefinite" />
+                    </path>
+                    <text x="150" y="420" fontSize="14" fill={particleColor} fontWeight="bold">Water Vapour</text>
+                  </g>
+                )}
+
+                {step === 2 && (
+                   <g>
+                     <text x="400" y="300" textAnchor="middle" fontSize="60" fill={particleColor} opacity="0.1" fontWeight="900">OSMOSIS</text>
+                     <text x="400" y="300" textAnchor="middle" fontSize="40" fill={particleColor} fontWeight="bold" stroke="white" strokeWidth="2">2. OSMOSIS</text>
+                     
+                     <path d="M560 260 L450 240" stroke={particleColor} strokeWidth="5" markerEnd="url(#arrow)" />
+                     <path d="M420 230 L350 150" stroke={particleColor} strokeWidth="5" markerEnd="url(#arrow)" />
+                     <path d="M320 140 L220 120" stroke={particleColor} strokeWidth="5" markerEnd="url(#arrow)" />
+                     
+                     <rect x="280" y="120" width="160" height="30" rx="5" fill="white" opacity="0.8"/>
+                     <text x="290" y="140" fontSize="12" fill={particleColor} fontWeight="bold">Water Potential Gradient</text>
+                   </g>
+                )}
+
+                {step === 3 && (
+                   <g>
+                     <text x="400" y="300" textAnchor="middle" fontSize="60" fill="#333" opacity="0.1" fontWeight="900">PULL</text>
+                     <text x="400" y="300" textAnchor="middle" fontSize="40" fill="#333" fontWeight="bold" stroke="white" strokeWidth="2">3. TRANSPIRATION PULL</text>
+                     
+                     <line x1="650" y1="400" x2="650" y2="100" stroke={particleColor} strokeWidth="8" strokeDasharray="10 5">
+                        <animate attributeName="stroke-dashoffset" from="100" to="0" dur="2s" repeatCount="indefinite" />
+                     </line>
+                     <text x="670" y="250" fontSize="14" fill="#1565C0" fontWeight="bold" transform="rotate(90, 670, 250)">SUCTION</text>
+                   </g>
+                )}
+                
+                {step === 4 && (
+                   <g>
+                     <text x="400" y="300" textAnchor="middle" fontSize="60" fill="#D50000" opacity="0.1" fontWeight="900">EVIDENCE</text>
+                     <text x="400" y="300" textAnchor="middle" fontSize="40" fill="#D50000" fontWeight="bold" stroke="white" strokeWidth="2">4. STAINING</text>
+                     <path d="M570 280 L730 280 L700 230 Q650 210 600 230 Z" fill="#EF5350" opacity="0.8">
+                        <animate attributeName="opacity" values="0;0.8" dur="1s" fill="freeze" />
+                     </path>
+                   </g>
+                )}
+              </svg>
+            </div>
+          );
+        };
+
+        const ImportanceVisual = ({ health }) => {
+          const isWilted = health === 'wilted';
+          return (
+            <div className="w-full h-full flex flex-row relative">
+              <div className="w-1/2 h-full flex items-center justify-center bg-gradient-to-b from-sky-50 to-white relative">
+                 <svg viewBox="0 0 300 400" className="h-full max-h-[350px] drop-shadow-xl">
+                     <path d="M100 300 L200 300 L190 380 L110 380 Z" fill="#8D6E63" stroke="#5D4037" strokeWidth="2" />
+                     <path d={isWilted ? "M150 300 Q150 200 180 150" : "M150 300 L150 100"} stroke="#4CAF50" strokeWidth="8" fill="none" className="transition-all duration-1000" />
+                     <g className="transition-all duration-1000" transform={isWilted ? "translate(180, 150) rotate(45)" : "translate(150, 120)"}>
+                        <path d="M0 0 Q-50 -20 0 -80 Q50 -20 0 0" fill={isWilted ? "#AED581" : "#66BB6A"} stroke="#388E3C" />
+                     </g>
+                     <g className="transition-all duration-1000" transform={isWilted ? "translate(160, 220) rotate(60)" : "translate(150, 200)"}>
+                        <path d="M0 0 Q-40 10 -60 -20 Q-20 -30 0 0" fill={isWilted ? "#AED581" : "#66BB6A"} stroke="#388E3C" />
+                     </g>
+                 </svg>
+                 {isWilted && (
+                    <div className="absolute bottom-4 left-4 bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold animate-pulse">
+                      Low Turgor Pressure
+                    </div>
+                 )}
+              </div>
+
+              <div className="w-1/2 h-full border-l border-stone-200 bg-white p-4 flex flex-col items-center justify-center">
+                <h3 className="font-bold text-stone-600 mb-4 flex items-center gap-2"><Icons.Search size={16}/> Cell Zoom</h3>
+                <svg viewBox="0 0 200 200" className="w-48 h-48">
+                  <rect x="20" y="20" width="160" height="160" rx="10" fill="none" stroke="#4CAF50" strokeWidth="8" />
+                  <rect 
+                    x={isWilted ? "40" : "25"} 
+                    y={isWilted ? "40" : "25"} 
+                    width={isWilted ? "120" : "150"} 
+                    height={isWilted ? "120" : "150"} 
+                    rx="10" 
+                    fill="#DCEDC8" 
+                    stroke="#8BC34A" 
+                    strokeWidth="2"
+                    className="transition-all duration-1000 ease-in-out"
+                  />
+                  <circle 
+                    cx="100" 
+                    cy="100" 
+                    r={isWilted ? "20" : "60"} 
+                    fill="#B3E5FC" 
+                    stroke="#4FC3F7" 
+                    strokeWidth="1"
+                    className="transition-all duration-1000 ease-in-out"
+                  />
+                  <line x1="180" y1="100" x2="200" y2="100" stroke="#333" />
+                  <text x="190" y="110" fontSize="10" textAnchor="end" fill="#333">Cell Wall</text>
+                  <line x1={isWilted ? "140" : "160"} y1="60" x2="180" y2="40" stroke="#333" />
+                  <text x="180" y="35" fontSize="10" textAnchor="middle" fill="#333">Membrane</text>
+                  <text x="100" y="105" textAnchor="middle" fontSize="10" fill="#0277BD" className="transition-all duration-1000 opacity-80">Vacuole</text>
+                </svg>
+
+                <div className="mt-4 text-center">
+                  <div className={`text-lg font-bold ${isWilted ? "text-red-600" : "text-green-600"}`}>
+                    {isWilted ? "Plasmolyzed" : "Turgid"}
+                  </div>
+                  <p className="text-xs text-stone-500 mt-1">
+                    {isWilted 
+                      ? "Water leaves vacuole. Membrane pulls away from wall." 
+                      : "Vacuole full. Membrane pushes against wall."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const InvestigationVisual = ({ rate }) => {
+          const animSpeed = Math.max(0.2, 2 / rate);
+          return (
+            <div className="w-full h-full bg-sky-50 relative overflow-hidden font-sans">
+               <svg viewBox="0 0 400 500" className="w-full h-full">
+                  <defs>
+                     <style>
+                       {`
+                         @keyframes particleRise {
+                           0% { transform: translateY(0); opacity: 0; }
+                           10% { opacity: 1; }
+                           100% { transform: translateY(-400px); opacity: 0; }
+                         }
+                         .inv-particle { animation: particleRise ${animSpeed}s linear infinite; }
+                       `}
+                     </style>
+                  </defs>
+                  
+                  <rect x="0" y="400" width="400" height="100" fill="#D7CCC8" />
+                  <path d="M195 400 L195 150" stroke="#4CAF50" strokeWidth="10" />
+                  <path d="M195 200 Q100 150 120 250" fill="#66BB6A" />
+                  <path d="M195 180 Q290 130 270 230" fill="#66BB6A" />
+                  
+                  <circle cx="195" cy="420" r="4" fill="#2196F3" className="inv-particle" style={{animationDelay:'0s'}} />
+                  <circle cx="195" cy="450" r="4" fill="#2196F3" className="inv-particle" style={{animationDelay:'0.3s'}} />
+                  <circle cx="195" cy="480" r="4" fill="#2196F3" className="inv-particle" style={{animationDelay:'0.6s'}} />
+                  
+                  <g opacity={rate > 1.5 ? 1 : 0.3}>
+                     <path d="M120 200 L120 150" stroke="#2196F3" strokeWidth="2" strokeDasharray="4 2">
+                        <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.5s" repeatCount="indefinite" />
+                     </path>
+                     <path d="M270 180 L270 130" stroke="#2196F3" strokeWidth="2" strokeDasharray="4 2">
+                        <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.5s" repeatCount="indefinite" />
+                     </path>
+                  </g>
+
+                  <text x="200" y="100" textAnchor="middle" fontSize="24" fontWeight="bold" fill="#2196F3">
+                     Speed: {rate}x
+                  </text>
+               </svg>
+            </div>
+          );
+        };
+
+        const LeafSchematic = () => (
+          <svg viewBox="0 0 100 60" className="w-32 h-20">
+            <path d="M10 30 Q30 5 50 5 Q70 5 90 30 Q70 55 50 55 Q30 55 10 30" fill="none" stroke="#333" strokeWidth="2" />
+            <circle cx="50" cy="30" r="15" fill="none" stroke="#333" />
+            <path d="M35 30 A15 15 0 0 1 65 30 Z" fill="#FF7043" /> 
+            <line x1="10" y1="30" x2="90" y2="30" stroke="#333" strokeWidth="1" strokeDasharray="2 2" />
+          </svg>
+        );
+
+        const StemSchematic = () => (
+          <svg viewBox="0 0 100 100" className="w-24 h-24">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#333" strokeWidth="2" />
+            {Array.from({ length: 8 }).map((_, i) => {
+               const angle = (i / 8) * Math.PI * 2;
+               const x = 50 + 30 * Math.cos(angle);
+               const y = 50 + 30 * Math.sin(angle);
+               return (
+                 <g key={i} transform={`translate(${x}, ${y}) rotate(${(angle * 180) / Math.PI + 90})`}>
+                    <ellipse cx="0" cy="0" rx="5" ry="8" fill="none" stroke="#333" />
+                    <path d="M-5 0 A5 8 0 0 0 5 0 Z" fill="#FF7043" transform="rotate(180)" /> 
+                 </g>
+               );
+            })}
+          </svg>
+        );
+
+        const RootSchematic = () => (
+          <svg viewBox="0 0 100 100" className="w-24 h-24">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#333" strokeWidth="2" />
+            <circle cx="50" cy="50" r="15" fill="none" stroke="#333" />
+            <path d="M50 38 L53 47 L62 50 L53 53 L50 62 L47 53 L38 50 L47 47 Z" fill="#FF7043" />
+          </svg>
+        );
+
+        const TrunkSchematic = () => (
+          <svg viewBox="0 0 100 100" className="w-24 h-24">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#333" strokeWidth="2" />
+            <circle cx="50" cy="50" r="35" fill="#FFCCBC" stroke="#333" strokeDasharray="2 2"/>
+            <circle cx="50" cy="50" r="25" fill="#FFAB91" stroke="#333" strokeDasharray="2 2"/>
+            <circle cx="50" cy="50" r="15" fill="#FF7043" stroke="#333" />
+            <text x="50" y="95" textAnchor="middle" fontSize="8" fill="#333">Bark</text>
+          </svg>
+        );
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<TranspirationApp />);
+    </script>
+</body>
+</html>
