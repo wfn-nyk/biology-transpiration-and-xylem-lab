@@ -181,12 +181,17 @@
                           {/* REFERENCE IMAGE PLACEHOLDER */}
                           <div className="mb-4 p-2 bg-stone-100 rounded border border-stone-200">
                              <p className="text-xs font-bold text-stone-500 mb-2">Reference Diagram:</p>
-                             <img 
-                                src="https://drive.google.com/uc?export=view&id=1RFZ_9n6QJbiZIU8jlI68RjlqYal4TQp2" 
-                                alt="Mechanism Reference" 
-                                className="w-full rounded shadow-sm"
-                                referrerPolicy="no-referrer"
-                             />
+                             <div className="overflow-hidden rounded shadow-sm bg-gray-200 min-h-[150px] flex items-center justify-center">
+                               <img 
+                                  src="https://drive.google.com/thumbnail?id=1RFZ_9n6QJbiZIU8jlI68RjlqYal4TQp2&sz=w1000" 
+                                  alt="Mechanism Reference" 
+                                  className="w-full h-auto object-cover"
+                                  onError={(e) => {
+                                    e.target.onerror = null; 
+                                    e.target.src='https://via.placeholder.com/400x300?text=Check+Image+Permissions';
+                                  }}
+                               />
+                             </div>
                           </div>
 
                           <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
@@ -333,10 +338,10 @@
                       <div className="border border-stone-200 rounded-xl overflow-hidden flex flex-col md:flex-row h-80">
                          <div className="w-full md:w-2/3 bg-stone-100 relative flex items-center justify-center group overflow-hidden">
                             <img 
-                                src="https://drive.google.com/uc?export=view&id=10c8akOjcYTgouFWWYE-fauNilFRjVW30" 
+                                src="https://drive.google.com/thumbnail?id=10c8akOjcYTgouFWWYE-fauNilFRjVW30&sz=w1000" 
                                 alt="Leaf Xylem" 
                                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
-                                referrerPolicy="no-referrer"
+                                onError={(e) => {e.target.onerror = null; e.target.src='https://via.placeholder.com/600x400?text=Image+Load+Error';}}
                             />
                          </div>
                          <div className="w-full md:w-1/3 bg-white p-4 flex flex-col items-center justify-center border-l border-stone-100">
@@ -350,10 +355,10 @@
                       <div className="border border-stone-200 rounded-xl overflow-hidden flex flex-col md:flex-row h-80">
                          <div className="w-full md:w-2/3 bg-stone-100 relative flex items-center justify-center group overflow-hidden">
                             <img 
-                                src="https://drive.google.com/uc?export=view&id=12G01--DJS_AZ0eWppkyq1iGMd-6fwft8" 
+                                src="https://drive.google.com/thumbnail?id=12G01--DJS_AZ0eWppkyq1iGMd-6fwft8&sz=w1000" 
                                 alt="Stem Xylem" 
                                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
-                                referrerPolicy="no-referrer"
+                                onError={(e) => {e.target.onerror = null; e.target.src='https://via.placeholder.com/600x400?text=Image+Load+Error';}}
                             />
                          </div>
                          <div className="w-full md:w-1/3 bg-white p-4 flex flex-col items-center justify-center border-l border-stone-100">
@@ -367,10 +372,10 @@
                       <div className="border border-stone-200 rounded-xl overflow-hidden flex flex-col md:flex-row h-80">
                          <div className="w-full md:w-2/3 bg-stone-100 relative flex items-center justify-center group overflow-hidden">
                             <img 
-                                src="https://drive.google.com/uc?export=view&id=1CYZVJy6rt3nlbnyp1LgrQ0WEfLD2NgOk" 
+                                src="https://drive.google.com/thumbnail?id=1CYZVJy6rt3nlbnyp1LgrQ0WEfLD2NgOk&sz=w1000" 
                                 alt="Root Xylem" 
                                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
-                                referrerPolicy="no-referrer"
+                                onError={(e) => {e.target.onerror = null; e.target.src='https://via.placeholder.com/600x400?text=Image+Load+Error';}}
                             />
                          </div>
                          <div className="w-full md:w-1/3 bg-white p-4 flex flex-col items-center justify-center border-l border-stone-100">
@@ -384,10 +389,10 @@
                       <div className="border border-stone-200 rounded-xl overflow-hidden flex flex-col md:flex-row h-80">
                          <div className="w-full md:w-2/3 bg-stone-100 relative flex items-center justify-center group overflow-hidden">
                             <img 
-                                src="https://drive.google.com/uc?export=view&id=16Y-WhFvC7h35j1qZl48h8Jgi97z_89Al" 
+                                src="https://drive.google.com/thumbnail?id=16Y-WhFvC7h35j1qZl48h8Jgi97z_89Al&sz=w1000" 
                                 alt="Trunk Xylem" 
                                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
-                                referrerPolicy="no-referrer"
+                                onError={(e) => {e.target.onerror = null; e.target.src='https://via.placeholder.com/600x400?text=Image+Load+Error';}}
                             />
                          </div>
                          <div className="w-full md:w-1/3 bg-white p-4 flex flex-col items-center justify-center border-l border-stone-100">
