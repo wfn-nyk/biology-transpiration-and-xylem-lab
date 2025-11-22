@@ -178,22 +178,6 @@
                         </div>
                       ) : (
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex-grow flex flex-col">
-                          {/* REFERENCE IMAGE PLACEHOLDER */}
-                          <div className="mb-4 p-2 bg-stone-100 rounded border border-stone-200">
-                             <p className="text-xs font-bold text-stone-500 mb-2">Reference Diagram:</p>
-                             <div className="overflow-hidden rounded shadow-sm bg-gray-200 min-h-[150px] flex items-center justify-center">
-                               <img 
-                                  src="https://drive.google.com/thumbnail?id=1RFZ_9n6QJbiZIU8jlI68RjlqYal4TQp2&sz=w1000" 
-                                  alt="Mechanism Reference" 
-                                  className="w-full h-auto object-cover"
-                                  onError={(e) => {
-                                    e.target.onerror = null; 
-                                    e.target.src='https://via.placeholder.com/400x300?text=Check+Image+Permissions';
-                                  }}
-                               />
-                             </div>
-                          </div>
-
                           <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
                              <Icons.PlayCircle className="text-blue-500"/> The Mechanism
                           </h3>
@@ -218,12 +202,32 @@
                       )}
                     </div>
 
-                    <div className="lg:col-span-2 bg-white rounded-xl shadow-lg border border-stone-200 h-[700px] relative overflow-hidden">
-                      {labViewMode === 'structure' ? (
-                         <LabCrossSectionView isStained={isStained} />
-                      ) : (
-                         <ProcessAnimationView step={processStep} isStained={isStained} />
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                      {/* REFERENCE IMAGE PLACEHOLDER (MOVED HERE) */}
+                      {labViewMode === 'process' && (
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-200">
+                           <p className="text-xs font-bold text-stone-500 mb-2">Reference Diagram:</p>
+                           <div className="overflow-hidden rounded shadow-sm bg-gray-200 min-h-[150px] flex items-center justify-center">
+                             <img 
+                                src="https://drive.google.com/thumbnail?id=1RFZ_9n6QJbiZIU8jlI68RjlqYal4TQp2&sz=w1000" 
+                                alt="Mechanism Reference" 
+                                className="w-full h-auto max-h-[300px] object-contain"
+                                onError={(e) => {
+                                  e.target.onerror = null; 
+                                  e.target.src='https://via.placeholder.com/600x300?text=Check+Image+Permissions';
+                                }}
+                             />
+                           </div>
+                        </div>
                       )}
+
+                      <div className="bg-white rounded-xl shadow-lg border border-stone-200 h-[700px] relative overflow-hidden">
+                        {labViewMode === 'structure' ? (
+                           <LabCrossSectionView isStained={isStained} />
+                        ) : (
+                           <ProcessAnimationView step={processStep} isStained={isStained} />
+                        )}
+                      </div>
                     </div>
                   </React.Fragment>
                 )}
